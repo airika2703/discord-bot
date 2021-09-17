@@ -1,0 +1,8 @@
+{
+	"musicPrefix": "!music",
+	"musicChannelName": "Gaming",
+	"musicChannelPerms": [
+		"SPEAK",
+		"CONNECT"
+	]
+}

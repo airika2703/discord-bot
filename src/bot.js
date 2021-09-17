@@ -1,4 +1,6 @@
 require("dotenv").config();
+const {loadMusic} = require('../musicYTB/music');
+const config = require('../config.json');
 
 const { Client, WebhookClient } = require('discord.js');
 
@@ -19,6 +21,13 @@ client.on('ready', () => {
 
 client.on('message', async (message) => {
   if (message.author.bot) return;
+  if (message.content.startsWith(config.musicPrefix)) {
+    const args = message.content
+      .slice(config.musicPrefix.length)
+      .trim()
+      .split(/ +/);
+    loadMusic(config, args, message);
+}
   if (message.content.startsWith(PREFIX)) {
     const [CMD_NAME, ...args] = message.content
       .trim()
@@ -26,7 +35,7 @@ client.on('message', async (message) => {
       .split(/\s+/);
     if (CMD_NAME === 'kick') {
       if (!message.member.hasPermission('KICK_MEMBERS'))
-        return message.reply('You do not have permissions to use that command');
+        return false;
       if (args.length === 0)
         return message.reply('Please provide an ID');
       const member = message.guild.members.cache.get(args[0]);
