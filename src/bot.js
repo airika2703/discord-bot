@@ -20,6 +20,14 @@ client.on('ready', () => {
 });
 
 client.on('message', async (message) => {
+  console.log(`[${message.author.tag}] : ${message.content}`)
+  if (message.content === 'hello') {
+    message.reply('Hello im here!');
+  }
+  if (message.content === 'bot ngu') {
+    message.reply('Nghĩa ngu =))');
+  }
+
   if (message.author.bot) return;
   if (message.content.startsWith(config.musicPrefix)) {
     const args = message.content
@@ -37,28 +45,28 @@ client.on('message', async (message) => {
       if (!message.member.hasPermission('KICK_MEMBERS'))
         return false;
       if (args.length === 0)
-        return message.reply('Please provide an ID');
+        return message.reply('Hãy nhập ID');
       const member = message.guild.members.cache.get(args[0]);
       if (member) {
         member
           .kick()
-          .then((member) => message.channel.send(`${member} was kicked.`))
-          .catch((err) => message.channel.send('I cannot kick that user :('));
+          .then((member) => message.channel.send(`${member} đã bị đuổi.`))
+          .catch((err) => message.channel.send(`${author} không cho phép tôi làm điều này :'()`));
       } else {
-        message.channel.send('That member was not found');
+        message.channel.send('Người dùng không tồn tại');
       }
     } else if (CMD_NAME === 'ban') {
       if (!message.member.hasPermission('BAN_MEMBERS'))
-        return message.reply("You do not have permissions to use that command");
-      if (args.length === 0) return message.reply("Please provide an ID");
+        return false;
+      if (args.length === 0) return message.reply("Hãy nhập ID");
       try {
         const user = await message.guild.members.ban(args[0]);
-        message.channel.send('User was banned successfully');
+        message.channel.send('Người dùng đã bị cấm vĩnh viễn');
       } catch (err) {
         console.log(err);
-        message.channel.send('An error occured. Either I do not have permissions or the user was not found');
+        message.channel.send('Đã có lỗi hoặc tôi chưa được phép làm điều này!');
       }
-    } else if (CMD_NAME === 'announce') {
+    } else if (CMD_NAME === 'an') {
       console.log(args);
       const msg = args.join(' ');
       console.log(msg);
@@ -67,46 +75,46 @@ client.on('message', async (message) => {
   }
 });
 
-client.on('messageReactionAdd', (reaction, user) => {
-  const { name } = reaction.emoji;
-  const member = reaction.message.guild.members.cache.get(user.id);
-  if (reaction.message.id === '738666523408990258') {
-    switch (name) {
-      case '🍎':
-        member.roles.add('738664659103776818');
-        break;
-      case '🍌':
-        member.roles.add('738664632838782998');
-        break;
-      case '🍇':
-        member.roles.add('738664618511171634');
-        break;
-      case '🍑':
-        member.roles.add('738664590178779167');
-        break;
-    }
-  }
-});
+// client.on('messageReactionAdd', (reaction, user) => {
+//   const { name } = reaction.emoji;
+//   const member = reaction.message.guild.members.cache.get(user.id);
+//   if (reaction.message.id === '738666523408990258') {
+//     switch (name) {
+//       case '🍎':
+//         member.roles.add('738664659103776818');
+//         break;
+//       case '🍌':
+//         member.roles.add('738664632838782998');
+//         break;
+//       case '🍇':
+//         member.roles.add('738664618511171634');
+//         break;
+//       case '🍑':
+//         member.roles.add('738664590178779167');
+//         break;
+//     }
+//   }
+// });
 
-client.on('messageReactionRemove', (reaction, user) => {
-  const { name } = reaction.emoji;
-  const member = reaction.message.guild.members.cache.get(user.id);
-  if (reaction.message.id === '738666523408990258') {
-    switch (name) {
-      case '🍎':
-        member.roles.remove('738664659103776818');
-        break;
-      case '🍌':
-        member.roles.remove('738664632838782998');
-        break;
-      case '🍇':
-        member.roles.remove('738664618511171634');
-        break;
-      case '🍑':
-        member.roles.remove('738664590178779167');
-        break;
-    }
-  }
-});
+// client.on('messageReactionRemove', (reaction, user) => {
+//   const { name } = reaction.emoji;
+//   const member = reaction.message.guild.members.cache.get(user.id);
+//   if (reaction.message.id === '738666523408990258') {
+//     switch (name) {
+//       case '🍎':
+//         member.roles.remove('738664659103776818');
+//         break;
+//       case '🍌':
+//         member.roles.remove('738664632838782998');
+//         break;
+//       case '🍇':
+//         member.roles.remove('738664618511171634');
+//         break;
+//       case '🍑':
+//         member.roles.remove('738664590178779167');
+//         break;
+//     }
+//   }
+// });
 
 client.login(process.env.BOT_TOKEN);

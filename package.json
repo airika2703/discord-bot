@@ -17,6 +17,7 @@
     "dotenv": "^10.0.0",
     "ffmpeg": "0.0.4",
     "ffmpeg-static": "^4.4.0",
+    "ms": "^3.0.0-canary.1",
     "ytdl-core": "^4.9.1"
   }
 }

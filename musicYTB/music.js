@@ -79,6 +79,18 @@ const ytMusic = {
             serverQueue.connection.dispatcher.end();
         }
 
+        if (command === 'pause') {
+            if (!serverQueue) return false;
+            serverQueue.connection.dispatcher.pause();
+            message.reply('⏸ Đang dừng: _' + serverQueue.songs[0].title + '_ ⏸');
+        }
+
+        if (command === 'resume') {
+            if (!serverQueue) return false;
+            serverQueue.connection.dispatcher.resume();
+            message.reply('⏸ Chay lai: _' + serverQueue.songs[0].title + '_ ⏸');
+        }
+
         if (command === 'next') {
             if (!serverQueue) return false;
             serverQueue.connection.dispatcher.end();
@@ -112,12 +124,12 @@ async function playSong(message) {
     if (serverQueue.songs.length < 1) {
         serverQueue.voiceChannel.leave();
         playlist.delete(message.guild.id);
-        message.channel.send("⏹ Hết dữ liệu yêu cầu ⏹");
+        message.channel.send("⏹ Đã hết dữ liệu yêu cầu ⏹");
         return true;
     }
     let song = serverQueue.songs[0];
     let audio = ytdl(song.url, {
-        quality: 'highestaudio',
+        quality: 'lowestaudio',
         highWaterMark: 1024 * 1024 * 12
     });
     let dispatcher = serverQueue.connection.play(audio);
