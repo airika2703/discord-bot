@@ -1,3 +1,10 @@
+const { 
+    joinVoiceChannel, 
+    createAudioPlayer, 
+    createAudioResource, 
+    NoSubscriberBehavior,
+    AudioPlayerStatus 
+} = require('@discordjs/voice');
 const ytdl = require('ytdl-core');
 const playlist = new Map();
 
@@ -5,12 +12,14 @@ class Queue {
     constructor(voiceChannel) {
         this.voiceChannel = voiceChannel;
         this.connection = null;
+        this.player = null;
         this.songs = [];
         this.volume = 100;
         this.playing = true;
         this.repeat = false;
     }
 
+    
     // Volume
     setVolume(val) {
         this.volume = val;
@@ -28,9 +37,10 @@ class Queue {
 }
 
 class Song {
-    constructor(title, url) {
+    constructor(title, url, length) {
         this.title = title;
         this.url = url;
+        this.length = length;
     }
 }
 
@@ -54,91 +64,115 @@ const ytMusic = {
             //     }
             // }
 
-            let video = await ytdl.getInfo(url);
-            if (!video) {
-                message.reply('Nhập chính xác đường dẫn!');
+            try {
+                await ytdl.getInfo(url);
+            } catch(error) {
+                message.reply('ID / URL không tồn tại');
                 return false;
             }
-            const song = new Song(video.videoDetails.title, video.videoDetails.video_url);
+
+            let { videoDetails } = await ytdl.getInfo(url);
+            const song = new Song(videoDetails.title, videoDetails.video_url, videoDetails.lengthSeconds);
             if (!serverQueue) {
                 let queue = new Queue(voiceChannel);
                 playlist.set(message.guild.id, queue);
                 queue.songs.push(song);
-                let connection = await voiceChannel.join();
+                let connection = joinVoiceChannel({
+                    channelId: message.member.voice.channel.id,
+                    guildId: message.guild.id,
+                    adapterCreator: message.guild.voiceAdapterCreator
+                })
                 queue.connection = connection;
-                playSong(message);
+                let player = createAudioPlayer({
+                    behaviors: {
+                        noSubscriber: NoSubscriberBehavior.Pause,
+                    },
+                });
+                queue.player = player;
+                const play = playSong(message);
+                if (play) {
+                    await message.reply(':headphones: Đang phát: ' + song.title + ' :headphones: (' + song.length + ' giây)');
+                }
                 return true;
             }
             serverQueue.songs.push(song);
             message.reply('🎶 **Đã yêu cầu:** __' + song.title + '__ 🎶');
         }
-
         if (command === 'clear') {
             if (!serverQueue) return false;
             serverQueue.songs = [];
-            serverQueue.connection.dispatcher.end();
-        }
-
-        if (command === 'pause') {
-            if (!serverQueue) return false;
-            serverQueue.connection.dispatcher.pause();
-            message.reply('⏸ Đang dừng: _' + serverQueue.songs[0].title + '_ ⏸');
-        }
-
-        if (command === 'resume') {
-            if (!serverQueue) return false;
-            serverQueue.connection.dispatcher.resume();
-            message.reply('⏸ Chay lai: _' + serverQueue.songs[0].title + '_ ⏸');
+            serverQueue.player.stop();
         }
 
         if (command === 'next') {
             if (!serverQueue) return false;
-            serverQueue.connection.dispatcher.end();
-            message.reply('⏸ Đang dừng: __' + serverQueue.songs[0].title + '__ ⏸');
+            serverQueue.player.stop();
         }
-        
+
+        if (command === 'pause') {
+            if (!serverQueue) return false;
+            serverQueue.player.pause();
+        }
+
+        if (command === 'resume') {
+            if (!serverQueue) return false;
+            serverQueue.player.unpause();
+        }
+
         if (command === 'loop') {
             if (!serverQueue) return false;
             if (serverQueue.repeat) {
                 serverQueue.setLoop(false);
-                message.reply('➿ Tắt lặp: `' + serverQueue.songs[0].title + '` ➿');
+                message.reply(':loop: Tắt lặp: ' + serverQueue.songs[0].title + ' :loop:');
                 return true;
             }
             serverQueue.setLoop(true);
-            message.reply('➿ Bật lặp: `' + serverQueue.songs[0].title + '` ➿');
+            message.reply(':loop: Bật lặp: ' + serverQueue.songs[0].title + ' :loop:');
         }
 
         if (command === 'playlist') {
             if (!serverQueue) return false;
             let result = serverQueue.songs.map((song, i) => {
-                return `${(i == 0) ? `\n🎧 **Đang phát:** __` : `🎧 **${i}.** __`} ${song.title}__ 🎧`
+                return `${(i == 0) ? `\n🎧 **Đang phát:** __` : `🎧 **${i}.** __`} ${song.title}__ 🎧 ** ${song.length} giây)** `
             }).join('\n');
-            message.channel.send(result);
+            message.reply(result);
         }
+
+        
+
+        
     }
 }
-
 async function playSong(message) {
     const serverQueue = playlist.get(message.guild.id);
+
     if (!serverQueue) return;
+
     if (serverQueue.songs.length < 1) {
-        serverQueue.voiceChannel.leave();
+        serverQueue.connection.destroy();
         playlist.delete(message.guild.id);
-        message.channel.send("⏹ Đã hết dữ liệu yêu cầu ⏹");
-        return true;
+        message.reply(":stop_button: Hết dữ liệu yêu cầu :stop_button:");
+        return false;
     }
+
     let song = serverQueue.songs[0];
     let audio = ytdl(song.url, {
-        quality: 'lowestaudio',
-        highWaterMark: 1024 * 1024 * 12
+        quality: 'highestaudio',
+        highWaterMark: 1024 * 1024 * 12,
+        dlChunkSize: 0
     });
-    let dispatcher = serverQueue.connection.play(audio);
-    dispatcher.setVolume(serverQueue.volume / 100);
-    let playing = await message.channel.send('🎧 **Đang phát:** __' + song.title + '__ 🎧');
-    dispatcher.on('finish', () => {
+
+    const resource = createAudioResource(audio, { inlineVolume: true });
+    resource.volume.setVolume(serverQueue.volume / 100);
+
+    serverQueue.player.play(resource);
+    serverQueue.connection.subscribe(serverQueue.player);
+    serverQueue.player.on(AudioPlayerStatus.Idle, async function () {
         if (!serverQueue.repeat) serverQueue.songs.shift();
         playSong(message);
         return true;
     });
+
+    return true;
 }
 module.exports = ytMusic;

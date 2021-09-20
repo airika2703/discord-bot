@@ -1,6 +1,6 @@
 {
-	"musicPrefix": "!music",
-	"musicChannelName": "Gaming",
+	"musicPrefix": "/music",
+	"musicChannelName": "Music",
 	"musicChannelPerms": [
 		"SPEAK",
 		"CONNECT"
