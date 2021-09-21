@@ -9,7 +9,7 @@
     "dev": "nodemon ./src/bot.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Khang",
   "engines": {
     "node": "16.x"
   },

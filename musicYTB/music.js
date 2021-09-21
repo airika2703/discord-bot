@@ -163,7 +163,7 @@ async function playSong(message) {
     });
 
     const resource = createAudioResource(audio, { inlineVolume: true });
-    resource.volume.setVolume(serverQueue.volume / 100);
+    resource.volume.setVolume(serverQueue.volume / 70);
 
     serverQueue.player.play(resource);
     serverQueue.connection.subscribe(serverQueue.player);

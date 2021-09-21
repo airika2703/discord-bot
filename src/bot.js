@@ -57,7 +57,7 @@ const webhookClient = new WebhookClient({ id: process.env.WEBHOOK_ID, token: pro
 //   process.env.WEBHOOK_TOKEN,
 // );
 
-const PREFIX = "/";
+const PREFIX = "//";
 
 
 client.on('messageCreate', async message => {
