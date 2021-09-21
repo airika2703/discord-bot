@@ -1,3 +1,4 @@
+const { wakeDyno } = require('heroku-keep-awake');
 const { MessageActionRow,
         MessageButton, 
         Client, Intents, 
@@ -114,6 +115,13 @@ client.on('messageCreate', async message => {
       webhookClient.send({ content: msg });
     }
   }
+});
+
+// Express
+const express = require('express');
+const app = express();
+app.listen(process.env.PORT || 3000, () => {
+    wakeDyno(process.env.HEROKU_APP);
 });
 
 
